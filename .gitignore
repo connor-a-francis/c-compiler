@@ -1,0 +1,35 @@
+# Build artifacts
+/build/
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.out
+*.a
+*.d
+
+# Dependency files
+*.d
+
+# Backup files
+*~
+*.swp
+*.tmp
+
+# Clangd files
+/.clangd/
+.clangd/
+.compile_commands.json
+
+# Visual Studio Code
+.vscode/
+
+# CMake (if ever used)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Logs
+*.log
