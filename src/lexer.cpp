@@ -14,7 +14,6 @@ char EOF_ = '\x1B';
 std::vector<Token> Lexer::get_tokens() {
   if (this->char_vec.size() == 0) {
     return {EndOfFile{}};
-
   }
   while (true) {
     Token token = this->get_tok();
@@ -83,8 +82,10 @@ Token Lexer::get_symbol(char c) {
 };
 Token Lexer::get_string() {
   int start_index = this->char_index;
-  while ((isalnum(this->get_current())) && this->get_current() != EOF_) {
+  char cur = this->get_current();
+  while ((isalnum(cur)) && cur != EOF_) {
     this->move_read_head();
+    cur = this->get_current();
   }
   int end_index = this->char_index;
 
@@ -99,27 +100,27 @@ Token Lexer::get_string() {
     return {Extern{}};
   } else if (curr_string == "return") {
     return {Return{}};
-
   } else {
-    int length = end_index - start_index;
-    const char *start_ptr = this->char_vec.data() + start_index;
-    return Identifier{std::string_view(start_ptr, length)};
+    return Identifier{std::string_view(this->char_vec.data() + start_index,
+                                       end_index - start_index)};
   }
 };
 
 Token Lexer::get_number() {
   std::string number_string;
 
-  while (isdigit(this->get_current()) || this->get_current() == '.') {
-    number_string.push_back(this->get_current());
+  char cur = this->get_current();
+  while (isdigit(cur) || cur == '.') {
+    number_string.push_back(cur);
     this->move_read_head();
+    cur = this->get_current();
   }
 
   float res;
   std::stringstream ss(number_string);
   ss >> res;
 
-  if (ss.fail()) {
+  if (ss.fail() or !ss.eof()) {
     std::cerr << "Fatal Error: Invalid Conversion" << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -134,13 +135,14 @@ void Lexer::skip_whitespace() {
 void Lexer::move_read_head() { this->char_index += 1; };
 
 void Lexer::skip_comment() {
-  while ((this->get_current() != EOF_) && (this->get_current() != '\n') &&
-         (this->get_current() != '\r')) {
+  char cur = this->get_current();
+  while ((cur != EOF_) && (cur != '\n') && (cur != '\r')) {
     this->move_read_head();
+    cur = this->get_current();
   }
 };
 char Lexer::get_current() {
-  if (this->char_index >= this->char_vec.size() ) {
+  if (this->char_index >= this->char_vec.size()) {
     return EOF_;
   } else {
     return this->char_vec[this->char_index];

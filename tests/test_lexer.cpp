@@ -1,14 +1,137 @@
+#include "gtest/gtest.h"
 #include <cassert>
 #include <gtest/gtest.h>
 #include <variant>
 #include "compiler/lexer.h"
 #include "compiler/token.h"
-#include <sstream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 
+void test(std::string program, std::vector<Token> expected_input);
+void test_crashes(std::string program, std::string msg);
+
+
+TEST(LexerTest, LexerBuilds) {
+    Lexer result ({'a'});
+}
+TEST(LexerTest, LexerReadsEOF) {
+    test("", {EndOfFile{}});
+}
+TEST(LexerTest, LexerReadsSpaceEOF) {
+    test(" ", {EndOfFile{}});
+}
+TEST(LexerTest, LexerReadsDef) {
+        test(R"(def hello() {})", {
+            Def{},
+            Identifier("hello"),
+            LParen{},
+            RParen{},
+            LBrace{},
+            RBrace{},
+            EndOfFile{},
+        });
+}
+TEST(LexerTest, LexerReadsExtern) {
+    test(R"(extern hello;)", {
+        Extern{},
+        Identifier("hello"),
+        EOL{},
+        EndOfFile{},
+    });
+}
+TEST(LexerTest, LexerSkipsComment) {
+    test(R"(extern hello
+                          # skip me!
+                          def goodbye() {})", {
+            Extern{},
+            Identifier("hello"),
+            Def{},
+            Identifier("goodbye"),
+            LParen{},
+            RParen{},
+            LBrace{},
+            RBrace{},
+            EndOfFile{}
+        });
+}
+TEST(LexerTest, LexerReadsMath) {
+    test(R"(let a=(b+c)-d*e/(f+$);)", {
+            Let{},
+            Identifier("a"),
+            Eq{},
+            LParen{},
+            Identifier("b"),
+            Op('+'),
+            Identifier("c"),
+            RParen{},
+            Op('-'),
+            Identifier("d"),
+            Op('*'),
+            Identifier("e"),
+            Op('/'),
+            LParen{},
+            Identifier("f"),
+            Op('+'),
+            Misc('$'),
+            RParen{},
+            EOL{},
+            EndOfFile{}
+        });
+}
+
+TEST(LexerTest, LexerReadsDefAndImpl) {
+    test(R"(
+        def hello() {
+            let a = b + c;
+        }
+        )", {
+            Def{},
+            Identifier("hello"),
+            LParen{},
+            RParen{},
+            LBrace{},
+            Let{},
+            Identifier("a"),
+            Eq{},
+            Identifier("b"),
+            Op('+'),
+            Identifier("c"),
+            EOL{},
+            RBrace{},
+            EndOfFile{},
+    });
+}
+TEST(LexerTest, LexerReadsNumbers) {
+    test(R"(
+        def hellodef() {
+            let a = 45 + 69.2;
+        }
+        )", {
+            Def{},
+            Identifier("hellodef"),
+            LParen{},
+            RParen{},
+            LBrace{},
+            Let{},
+            Identifier("a"),
+            Eq{},
+            Number(45.0),
+            Op{'+'},
+            Number(69.2),
+            EOL{},
+            RBrace{},
+            EndOfFile{},
+        });
+}
+TEST(LexerTest, LexerCrashesWithMultipleDecimals) {
+    test_crashes(R"(
+        def hello() {
+            let a = 45 + 69.2.3;
+        }
+    )", "Fatal Error: Invalid Conversion");
+}
+// Utility Functions
 struct TokenHasher {
     std::string operator()(EndOfFile) const { return "EOF"; }
     std::string operator()(Let) const { return "Let"; }
@@ -37,181 +160,14 @@ std::vector<std::string> hash_tokens(const std::vector<Token> &tokens) {
     return hashed;
 }
 
-TEST(LexerTest, LexerBuilds) {
-    std::vector<char> char_vec {'a'};
-    Lexer result (char_vec);
-}
-TEST(LexerTest, LexerReadsEOF) {
-    std::vector<char> char_vec {};
-    Lexer lexer (char_vec);
-    std::vector<Token> result = lexer.get_tokens();
-    EXPECT_TRUE(std::holds_alternative<EndOfFile>(result[0]));
-    EXPECT_EQ(result.size(), 1);
-}
-TEST(LexerTest, LexerReadsSpaceEOF) {
-    std::vector<char> char_vec {' '};
-    Lexer lexer (char_vec);
-    auto result = hash_tokens(lexer.get_tokens());
-    auto expected = hash_tokens({EndOfFile{}});
-    EXPECT_EQ(result, expected);
-}
-TEST(LexerTest, LexerReadsDef) {
-        std::string program = R"(def hello() {})";
+void test(std::string program, std::vector<Token> expected_input) {
         std::vector<char> input(program.begin(), program.end());
         auto result = hash_tokens(Lexer(input).get_tokens());
-        auto expected = hash_tokens({
-            Def{},
-            Identifier("hello"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            RBrace{},
-            EndOfFile{},
-        });
-        EXPECT_EQ(result, expected);
-
+        auto expected = hash_tokens(expected_input);
+        ASSERT_EQ(result, expected);
 }
-TEST(LexerTest, LexerReadsExtern) {
-    std::string program = R"(extern hello;)";
-    std::vector<char> input(program.begin(), program.end());
-    auto result = hash_tokens(Lexer(input).get_tokens());
-    auto expected = hash_tokens({
-        Extern{},
-        Identifier("hello"),
-        EOL{},
-        EndOfFile{},
-    });
-        EXPECT_EQ(result, expected);
 
+void test_crashes(std::string program, std::string msg) {
+        std::vector<char> input(program.begin(), program.end());
+        ASSERT_DEATH(Lexer(input).get_tokens(), msg);
 }
-TEST(LexerTest, LexerSkipsComment) {
-    std::string program = R"(extern hello
-                          # skip me!
-                          def goodbye() {})";
-
-    std::vector<char> input(program.begin(), program.end());
-
-    auto result = hash_tokens(Lexer(input).get_tokens());
-    auto expected = hash_tokens({
-            Extern{},
-            Identifier("hello"),
-            Def{},
-            Identifier("goodbye"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            RBrace{},
-            EndOfFile{},
-        });
-        EXPECT_EQ(result, expected);
-}
-TEST(LexerTest, LexerReadsMath) {
-    std::string program = R"(let a=(b+c)-d*e/(f+$);)";
-    std::vector<char> input(program.begin(), program.end());
-    auto result = hash_tokens(Lexer(input).get_tokens());
-
-    auto expected = hash_tokens({
-            Let{},
-            Identifier("a"),
-            Eq{},
-            LParen{},
-            Identifier("b"),
-            Op('+'),
-            Identifier("c"),
-            RParen{},
-            Op('-'),
-            Identifier("d"),
-            Op('*'),
-            Identifier("e"),
-            Op('/'),
-            LParen{},
-            Identifier("f"),
-            Op('+'),
-            Misc('$'),
-            RParen{},
-            EOL{},
-            EndOfFile{}
-        });
-        EXPECT_EQ(result, expected);
-}
-TEST(LexerTest, LexerReadsDefAndImpl) {
-    
-    std::string program = R"(
-        def hello() {
-            let a = b + c;
-        }
-    )";
-
-    std::vector<char> input(program.begin(), program.end());
-    auto result = hash_tokens(Lexer(input).get_tokens());
-
-    auto expected = hash_tokens({
-            Def{},
-            Identifier("hello"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            Let{},
-            Identifier("a"),
-            Eq{},
-            Identifier("b"),
-            Op('+'),
-            Identifier("c"),
-            EOL{},
-            RBrace{},
-            EndOfFile{},
-    });
-        EXPECT_EQ(result, expected);
-}
-TEST(LexerTest, LexerReadsNumbers) {
-
-
-}
-TEST(LexerTest, LexerHatesWeirdNumbers) {}
-
-
-
-
-/*
-    #[test]
-    fn lexer_reads_numbers() {
-        let program: Vec<char> = r###"
-        def hellodef() {
-            let a = 45 + 69.2;
-        }
-        "###
-        .chars()
-        .collect();
-        let result = Lexer::new(program).get_tokens();
-        let expected = vec![
-            Token::Def,
-            Token::Identifier("hellodef".to_string()),
-            Token::LParen,
-            Token::RParen,
-            Token::LBrace,
-            Token::Let,
-            Token::Identifier("a".to_string()),
-            Token::Eq,
-            Token::Number(45f32),
-            Token::Add,
-            Token::Number(69.2),
-            Token::EOL,
-            Token::RBrace,
-            Token::EOF,
-        ];
-        assert_eq!(result, expected)
-    }
-    #[test]
-    #[should_panic]
-    fn lexer_hates_weird_numbers() {
-        let program: Vec<char> = r###"
-        def hello() {
-            let a = 45 + 69.2.3;
-        }
-        "###
-        .chars()
-        .collect();
-        let _ = Lexer::new(program).get_tokens();
-    }
-}
-*/
