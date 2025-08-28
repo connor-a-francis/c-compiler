@@ -11,19 +11,16 @@
 
 char EOF_ = '\x1B';
 
+
 std::vector<Token> Lexer::get_tokens() {
   if (this->char_vec.size() == 0) {
     return {EndOfFile{}};
   }
-  while (true) {
-    Token token = this->get_tok();
-    this->tokens.push_back(token);
-    if (std::holds_alternative<EndOfFile>(token)) {
-      break;
-    }
-  }
+  do {this->tokens.push_back(this->get_tok());}
+  while (!std::holds_alternative<EndOfFile>(this->tokens.back()));
   return this->tokens;
 };
+
 Token Lexer::get_tok() {
   this->skip_whitespace();
 
@@ -80,17 +77,22 @@ Token Lexer::get_symbol(char c) {
   }
   return t;
 };
+
 Token Lexer::get_string() {
-  int start_index = this->char_index;
+  int start = this->char_index;
+
   char cur = this->get_current();
   while ((isalnum(cur)) && cur != EOF_) {
     this->move_read_head();
     cur = this->get_current();
   }
-  int end_index = this->char_index;
 
-  std::string curr_string(this->char_vec.begin() + start_index,
-                          this->char_vec.begin() + end_index);
+  return get_token_from_string(start, this->char_index);
+};
+
+Token Lexer::get_token_from_string(int start, int end) {
+  auto vec_ptr = this->char_vec.begin();
+  std::string curr_string(vec_ptr + start, vec_ptr + end);
 
   if (curr_string == "let") {
     return {Let{}};
@@ -101,10 +103,10 @@ Token Lexer::get_string() {
   } else if (curr_string == "return") {
     return {Return{}};
   } else {
-    return Identifier{std::string_view(this->char_vec.data() + start_index,
-                                       end_index - start_index)};
+    return Identifier{
+        std::string_view(this->char_vec.data() + start, end - start)};
   }
-};
+}
 
 Token Lexer::get_number() {
   std::string number_string;
@@ -115,7 +117,10 @@ Token Lexer::get_number() {
     this->move_read_head();
     cur = this->get_current();
   }
+  return get_token_from_number_string(number_string);
+};
 
+Token Lexer::get_token_from_number_string(std::string number_string) {
   float res;
   std::stringstream ss(number_string);
   ss >> res;
@@ -125,13 +130,14 @@ Token Lexer::get_number() {
     exit(EXIT_FAILURE);
   }
   return {Number{res}};
-};
+}
 
 void Lexer::skip_whitespace() {
   while (isspace(this->get_current())) {
     this->move_read_head();
   }
 };
+
 void Lexer::move_read_head() { this->char_index += 1; };
 
 void Lexer::skip_comment() {
@@ -141,10 +147,7 @@ void Lexer::skip_comment() {
     cur = this->get_current();
   }
 };
+
 char Lexer::get_current() {
-  if (this->char_index >= this->char_vec.size()) {
-    return EOF_;
-  } else {
-    return this->char_vec[this->char_index];
-  }
+  return (this->char_index >= this->char_vec.size()) ? EOF_ : this->char_vec[this->char_index];
 };
