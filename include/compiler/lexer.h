@@ -7,7 +7,6 @@
 
 class Lexer {
 public:
-    // Public methods (interface)
     Lexer(std::vector<char> input){
         char_vec = input;
         char_index = 0;
