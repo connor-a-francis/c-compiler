@@ -2,8 +2,6 @@
 
 #include "token.h"
 #include <vector>
-#include <variant>
-#include<iostream>
 
 class Lexer {
 public:
@@ -29,7 +27,6 @@ private:
     void skip_comment();
     char get_current();
 
-    // Private member variables (data)
     std::vector<char> char_vec;
     int char_index;
     std::vector<Token> tokens;

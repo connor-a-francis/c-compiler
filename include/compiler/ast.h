@@ -1,125 +1,157 @@
-#ifndef AST
-#define AST
-
-#include <vector>
+#pragma once
 #include <memory>
+#include <string>
+#include <vector>
+#include <variant>
 #include "token.h"
+
 namespace AST {
 
+// Allowed return types for visitors
+using VisitResult = std::variant<std::string, int, double>;
+
+// Forward declarations
 class Assign;
 class Binary;
 class Call;
 class Grouping;
 class Literal;
 class Variable;
+class Definition;
+class Program;
+class Expr;
 
-template <typename R>
+// Visitor interface
 class ExprVisitor {
 public:
-    virtual R visitAssignExpr(Assign& expr) = 0;
-    virtual R visitBinaryExpr(Binary& expr) = 0;
-    virtual R visitCallExpr(Call& expr) = 0;
-    virtual R visitGroupingExpr(Grouping& expr) = 0;
-    virtual R visitLiteralExpr(Literal& expr) = 0;
-    virtual R visitVariableExpr(Variable& expr) = 0;
+    virtual VisitResult visitAssignExpr(Assign& expr) = 0;
+    virtual VisitResult visitBinaryExpr(Binary& expr) = 0;
+    virtual VisitResult visitCallExpr(Call& expr) = 0;
+    virtual VisitResult visitGroupingExpr(Grouping& expr) = 0;
+    virtual VisitResult visitLiteralExpr(Literal& expr) = 0;
+    virtual VisitResult visitVariableExpr(Variable& expr) = 0;
+    virtual VisitResult visitDefinition(Definition& expr) = 0;
+    virtual VisitResult visitProgram(Program& expr) = 0;
+    virtual VisitResult visitExpr(Expr& expr) = 0;
     virtual ~ExprVisitor() = default;
 };
 
+// Base AST node
 class Expr {
 public:
-    template <typename R>
-    R accept(ExprVisitor<R>& visitor) {
-        return _accept(visitor);
+    VisitResult accept(ExprVisitor& visitor) {
+        return visitor.visitExpr(*this);
     }
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
-        return _accept(&visitor);
-    }
-
-    virtual ~Expr() = default;
 };
 
+// Program node
+class Program : public Expr {
+public:
+    std::vector<std::unique_ptr<Expr>> statements;
+
+    explicit Program(std::vector<std::unique_ptr<Expr>> stmts)
+        : statements(std::move(stmts)) {}
+
+    VisitResult accept(ExprVisitor& visitor) {
+        return visitor.visitProgram(*this);
+    }
+};
+
+// Assign node
 class Assign : public Expr {
 public:
-    Token name;
+    Identifier name;
     std::unique_ptr<Expr> value;
 
-    Assign(Token name, std::unique_ptr<Expr> value)
-        : name(std::move(name)), value(std::move(value)) {}
+    Assign(Identifier n, std::unique_ptr<Expr> v)
+        : name(std::move(n)), value(std::move(v)) {}
 
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
+    VisitResult accept(ExprVisitor& visitor) {
         return visitor.visitAssignExpr(*this);
     }
 };
 
+// Binary node
 class Binary : public Expr {
 public:
     std::unique_ptr<Expr> left;
-    Token op;
+    Op op;
     std::unique_ptr<Expr> right;
 
-    Binary(std::unique_ptr<Expr> left, Token op, std::unique_ptr<Expr> right)
-        : left(std::move(left)), op(std::move(op)), right(std::move(right)) {}
+    Binary(std::unique_ptr<Expr> l, Op o, std::unique_ptr<Expr> r)
+        : left(std::move(l)), op(std::move(o)), right(std::move(r)) {}
 
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
+    VisitResult accept(ExprVisitor& visitor) {
         return visitor.visitBinaryExpr(*this);
     }
 };
 
+// Call node
 class Call : public Expr {
 public:
-    std::unique_ptr<Expr> callee;
+    Identifier callee;
     Token closing_paren;
     std::vector<std::unique_ptr<Expr>> arguments;
 
-    Call(std::unique_ptr<Expr> callee, Token paren, std::vector<std::unique_ptr<Expr>> arguments)
-        : callee(std::move(callee)), closing_paren(std::move(paren)), arguments(std::move(arguments)) {}
+    Call(Identifier c, Token paren, std::vector<std::unique_ptr<Expr>> args)
+        : callee(std::move(c)), closing_paren(std::move(paren)), arguments(std::move(args)) {}
 
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
+    VisitResult accept(ExprVisitor& visitor) {
         return visitor.visitCallExpr(*this);
     }
 };
 
-
+// Grouping node
 class Grouping : public Expr {
 public:
     std::unique_ptr<Expr> expression;
 
-    Grouping(std::unique_ptr<Expr> expression)
-        : expression(std::move(expression)) {}
+    explicit Grouping(std::unique_ptr<Expr> expr)
+        : expression(std::move(expr)) {}
 
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
+    VisitResult accept(ExprVisitor& visitor) {
         return visitor.visitGroupingExpr(*this);
     }
 };
 
+// Literal node
 class Literal : public Expr {
 public:
-    int value; 
+    int value;
 
-    Literal(int value) : value(std::move(value)) {}
+    explicit Literal(int val) : value(val) {}
 
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
+    VisitResult accept(ExprVisitor& visitor) {
         return visitor.visitLiteralExpr(*this);
     }
 };
 
+// Variable node
 class Variable : public Expr {
 public:
-    Token name;
+    Identifier name;
 
-    Variable(Token name) : name(std::move(name)) {}
+    explicit Variable(Identifier n) : name(std::move(n)) {}
 
-    template <typename R>
-    R _accept(ExprVisitor<R>& visitor) {
+    VisitResult accept(ExprVisitor& visitor) {
         return visitor.visitVariableExpr(*this);
     }
 };
 
-}
-#endif 
+// Definition node
+class Definition : public Expr {
+public:
+    Identifier name;
+    std::vector<std::unique_ptr<Expr>> rands;
+    std::unique_ptr<Program> impl;
+
+    Definition(Identifier n, std::vector<std::unique_ptr<Expr>> r, std::unique_ptr<Program> i)
+        : name(std::move(n)), rands(std::move(r)), impl(std::move(i)) {}
+
+    VisitResult accept(ExprVisitor& visitor) {
+        return visitor.visitDefinition(*this);
+    }
+};
+
+} // namespace AST
+

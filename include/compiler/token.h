@@ -1,4 +1,3 @@
-// Token.h
 #pragma once
 #include <variant>
 #include <string_view>

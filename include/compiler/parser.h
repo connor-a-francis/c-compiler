@@ -8,19 +8,18 @@ class Parser {
 public:
     Parser(std::vector<Token> token_input){
         current = 0;
-        std::vector<Token> tokens = token_input;
-        std::vector<Expr> statements;
+        tokens = token_input;
+        statements.clear();
         tokens.reserve(100000);
         statements.reserve(100000);
     }
+    AST::Program parseProgram();
 
 private:
     int current;
-    std::vector<Expr> statements;
+    std::vector<std::unique_ptr<AST::Expr>> statements;
     std::vector<Token> tokens;
-    AST::Expr parseProgram();
     AST::Expr parseExpression();
-
     AST::Expr parseStatement();
     AST::Expr parseDefinition();
     AST::Expr parseBinding();
@@ -36,6 +35,17 @@ private:
     bool isAtEnd();
     Token peek();
     Token previous();
-    bool match(std::initializer_list<Token> types);
-    bool check(Token type);
+    template <typename... Ts>
+    bool match() {
+        if ((check<Ts>() || ...)) {  // fold expression
+            moveReadHead();
+            return true;
+        }
+        return false;
+    }
+    template <typename T>
+    bool check() {
+        return std::holds_alternative<T>(peek());
+    }
+    bool checkPrevious(Token type);
 };
