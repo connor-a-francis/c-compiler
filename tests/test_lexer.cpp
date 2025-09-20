@@ -7,167 +7,165 @@
 #include <string>
 #include <vector>
 
-
 void test(std::string program, std::vector<Token> expected_input);
 void test_crashes(std::string program, std::string msg);
 
-
-TEST(LexerTest, LexerBuilds) {
-    Lexer result ({'a'});
+TEST(LexerTest, LexerBuilds)
+{
+    Lexer result({'a'});
 }
-TEST(LexerTest, LexerReadsEOF) {
-    test("", {EndOfFile{}});
+TEST(LexerTest, LexerReadsEOF)
+{
+    test("", {TokenType::END_OF_FILE});
 }
-TEST(LexerTest, LexerReadsSpaceEOF) {
-    test(" ", {EndOfFile{}});
+TEST(LexerTest, LexerReadsSpaceEOF)
+{
+    test(" ", {TokenType::END_OF_FILE});
 }
-TEST(LexerTest, LexerReadsDef) {
-        test(R"(def hello() {})", {
-            Def{},
-            Identifier("hello"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            RBrace{},
-            EndOfFile{},
-        });
+TEST(LexerTest, LexerReadsDef)
+{
+    test(R"(def hello() {})", {
+                                  TokenType::DEF,
+                                  {TokenType::IDENTIFIER, std::string("hello")},
+                                  TokenType::L_PAREN,
+                                  TokenType::R_PAREN,
+                                  TokenType::L_BRACE,
+                                  TokenType::R_BRACE,
+                                  TokenType::END_OF_FILE,
+                              });
 }
-TEST(LexerTest, LexerReadsExtern) {
+TEST(LexerTest, LexerReadsExtern)
+{
     test(R"(extern hello;)", {
-        Extern{},
-        Identifier("hello"),
-        EOL{},
-        EndOfFile{},
-    });
+                                 TokenType::EXTERN,
+                                 {TokenType::IDENTIFIER, std::string("hello")},
+                                 TokenType::EOL,
+                                 TokenType::END_OF_FILE,
+                             });
 }
-TEST(LexerTest, LexerSkipsComment) {
+TEST(LexerTest, LexerSkipsComment)
+{
     test(R"(extern hello
                           # skip me!
-                          def goodbye() {})", {
-            Extern{},
-            Identifier("hello"),
-            Def{},
-            Identifier("goodbye"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            RBrace{},
-            EndOfFile{}
-        });
+                          def goodbye() {})",
+         {TokenType::EXTERN,
+          {TokenType::IDENTIFIER, std::string("hello")},
+          TokenType::DEF,
+          {TokenType::IDENTIFIER, std::string("goodbye")},
+          TokenType::L_PAREN,
+          TokenType::R_PAREN,
+          TokenType::L_BRACE,
+          TokenType::R_BRACE,
+          TokenType::END_OF_FILE});
 }
-TEST(LexerTest, LexerReadsMath) {
-    test(R"(let a=(b+c)-d*e/(f+$);)", {
-            Let{},
-            Identifier("a"),
-            Eq{},
-            LParen{},
-            Identifier("b"),
-            Op('+'),
-            Identifier("c"),
-            RParen{},
-            Op('-'),
-            Identifier("d"),
-            Op('*'),
-            Identifier("e"),
-            Op('/'),
-            LParen{},
-            Identifier("f"),
-            Op('+'),
-            Misc('$'),
-            RParen{},
-            EOL{},
-            EndOfFile{}
-        });
+TEST(LexerTest, LexerReadsMath)
+{
+    test(R"(let a=(b+c)-d*e/(f+$);)", {TokenType::LET,
+                                       {TokenType::IDENTIFIER, std::string("a")},
+                                       TokenType::EQ,
+                                       TokenType::L_PAREN,
+                                       {TokenType::IDENTIFIER, std::string("b")},
+                                       TokenType::ADD,
+                                       {TokenType::IDENTIFIER, std::string("c")},
+                                       TokenType::R_PAREN,
+                                       TokenType::SUB,
+                                       {TokenType::IDENTIFIER, std::string("d")},
+                                       TokenType::MUL,
+                                       {TokenType::IDENTIFIER, std::string("e")},
+                                       TokenType::DIV,
+                                       TokenType::L_PAREN,
+                                       {TokenType::IDENTIFIER, std::string("f")},
+                                       TokenType::ADD,
+                                       {TokenType::MISC, '$'},
+                                       TokenType::R_PAREN,
+                                       TokenType::EOL,
+                                       TokenType::END_OF_FILE});
 }
 
-TEST(LexerTest, LexerReadsDefAndImpl) {
+TEST(LexerTest, LexerReadsDefAndImpl)
+{
     test(R"(
         def hello() {
             let a = b + c;
         }
-        )", {
-            Def{},
-            Identifier("hello"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            Let{},
-            Identifier("a"),
-            Eq{},
-            Identifier("b"),
-            Op('+'),
-            Identifier("c"),
-            EOL{},
-            RBrace{},
-            EndOfFile{},
-    });
+        )",
+         {
+             TokenType::DEF,
+             {TokenType::IDENTIFIER, std::string("hello")},
+             TokenType::L_PAREN,
+             TokenType::R_PAREN,
+             TokenType::L_BRACE,
+             TokenType::LET,
+             {TokenType::IDENTIFIER, std::string("a")},
+             TokenType::EQ,
+             {TokenType::IDENTIFIER, std::string("b")},
+             TokenType::ADD,
+             {TokenType::IDENTIFIER, std::string("c")},
+             TokenType::EOL,
+             TokenType::R_BRACE,
+             TokenType::END_OF_FILE,
+         });
 }
-TEST(LexerTest, LexerReadsNumbers) {
+TEST(LexerTest, LexerReadsNumbers)
+{
     test(R"(
         def hellodef() {
             let a = 45 + 69.2;
         }
-        )", {
-            Def{},
-            Identifier("hellodef"),
-            LParen{},
-            RParen{},
-            LBrace{},
-            Let{},
-            Identifier("a"),
-            Eq{},
-            Number(45.0),
-            Op{'+'},
-            Number(69.2),
-            EOL{},
-            RBrace{},
-            EndOfFile{},
-        });
+        )",
+         {
+             TokenType::DEF,
+             {TokenType::IDENTIFIER, std::string("hellodef")},
+             TokenType::L_PAREN,
+             TokenType::R_PAREN,
+             TokenType::L_BRACE,
+             TokenType::LET,
+             {TokenType::IDENTIFIER, std::string("a")},
+             TokenType::EQ,
+             {TokenType::NUMBER, (float)45.0},
+             TokenType::ADD,
+             {TokenType::NUMBER, (float)69.2},
+             TokenType::EOL,
+             TokenType::R_BRACE,
+             TokenType::END_OF_FILE,
+         });
 }
-TEST(LexerTest, LexerCrashesWithMultipleDecimals) {
+TEST(LexerTest, LexerCrashesWithMultipleDecimals)
+{
     test_crashes(R"(
         def hello() {
             let a = 45 + 69.2.3;
         }
-    )", "Fatal Error: Invalid Conversion");
+    )",
+                 "Fatal Error: Invalid Conversion");
 }
-// Utility Functions
-struct TokenHasher {
-    std::string operator()(EndOfFile) const { return "EOF"; }
-    std::string operator()(Let) const { return "Let"; }
-    std::string operator()(Def) const { return "Def"; }
-    std::string operator()(Return) const { return "Return"; }
-    std::string operator()(Extern) const { return "Extern"; }
-    std::string operator()(Identifier id) const { return "Id(" + std::string(id.name) + ")"; }
-    std::string operator()(Number n) const {
-        return "Num(" + std::to_string(n.value) + ")";
+
+void test(std::string program, std::vector<Token> expected_input)
+{
+    std::vector<char> input(program.begin(), program.end());
+    auto result = Lexer(input).get_tokens();
+    auto expected = expected_input;
+    ASSERT_EQ(result.size(), expected.size());
+    for (size_t i = 0; i < result.size(); i++)
+    {
+        ASSERT_EQ(result[i].type, expected[i].type);
+        if (result[i].type == TokenType::IDENTIFIER)
+        {
+            ASSERT_EQ(std::any_cast<std::string>(result[i].literal), std::any_cast<std::string>(expected[i].literal));
+        }
+        else if (result[i].type == TokenType::NUMBER)
+        {
+            ASSERT_EQ(std::any_cast<float>(result[i].literal), std::any_cast<float>(expected[i].literal));
+        }
+        else if (result[i].type == TokenType::MISC)
+        {
+            ASSERT_EQ(std::any_cast<char>(result[i].literal), std::any_cast<char>(expected[i].literal));
+        }
     }
-    std::string operator()(Op op) const { return std::string("Op(") + op.op + ")"; }
-    std::string operator()(EOL) const { return "EOL"; }
-    std::string operator()(Eq) const { return "Eq"; }
-    std::string operator()(LParen) const { return "LParen"; }
-    std::string operator()(RParen) const { return "RParen"; }
-    std::string operator()(LBrace) const { return "LBrace"; }
-    std::string operator()(RBrace) const { return "RBrace"; }
-    std::string operator()(Misc m) const { return std::string("Misc(") + m.val + ")"; }
-};
-
-std::vector<std::string> hash_tokens(const std::vector<Token> &tokens) {
-    std::vector<std::string> hashed;
-    for (const auto &tok : tokens) {
-        hashed.push_back(std::visit(TokenHasher{}, tok));
-    }
-    return hashed;
 }
 
-void test(std::string program, std::vector<Token> expected_input) {
-        std::vector<char> input(program.begin(), program.end());
-        auto result = hash_tokens(Lexer(input).get_tokens());
-        auto expected = hash_tokens(expected_input);
-        ASSERT_EQ(result, expected);
-}
-
-void test_crashes(std::string program, std::string msg) {
-        std::vector<char> input(program.begin(), program.end());
-        ASSERT_DEATH(Lexer(input).get_tokens(), msg);
+void test_crashes(std::string program, std::string msg)
+{
+    std::vector<char> input(program.begin(), program.end());
+    ASSERT_DEATH(Lexer(input).get_tokens(), msg);
 }

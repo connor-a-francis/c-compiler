@@ -14,11 +14,11 @@ char EOF_ = '\x1B';
 
 std::vector<Token> Lexer::get_tokens() {
   if (this->char_vec.size() == 0) {
-    return {EndOfFile{}};
+    return {Token(TokenType::END_OF_FILE)};
   }
   do {this->tokens.push_back(this->get_tok());}
-  while (!std::holds_alternative<EndOfFile>(this->tokens.back()));
-  return this->tokens;
+  while (this->tokens.back().type != TokenType::END_OF_FILE);
+    return this->tokens;
 };
 
 Token Lexer::get_tok() {
@@ -27,7 +27,7 @@ Token Lexer::get_tok() {
   char c = this->get_current();
 
   if (c == EOF_) {
-    return {EndOfFile{}};
+    return {Token(TokenType::END_OF_FILE)};
   } else if (isdigit(c) || c == '.') {
     return this->get_number();
   } else if (c == '#') {
@@ -45,35 +45,38 @@ Token Lexer::get_symbol(char c) {
   Token t;
   switch (c) {
   case '=':
-    t = Eq{};
+    t = TokenType::EQ;
     break;
   case ';':
-    t = EOL{};
+    t = TokenType::EOL;
     break;
   case '(':
-    t = LParen{};
+    t = TokenType::L_PAREN;
     break;
   case ')':
-    t = RParen{};
+    t = TokenType::R_PAREN;
     break;
   case '{':
-    t = LBrace{};
+    t = TokenType::L_BRACE;
     break;
   case '}':
-    t = RBrace{};
+    t = TokenType::R_BRACE;
     break;
-
   case '+':
-    [[fallthrough]];
+    t = TokenType::ADD;
+    break;
   case '-':
-    [[fallthrough]];
+    t = TokenType::SUB;
+    break;
   case '*':
-    [[fallthrough]];
+    t = TokenType::MUL;
+    break;
   case '/':
-    t = Op{c};
+    t = TokenType::DIV;
     break;
   default:
-    t = Misc{c};
+    t = TokenType::MISC;
+    t.literal = c;
   }
   return t;
 };
@@ -95,16 +98,16 @@ Token Lexer::get_token_from_string(int start, int end) {
   std::string curr_string(vec_ptr + start, vec_ptr + end);
 
   if (curr_string == "let") {
-    return {Let{}};
+    return TokenType::LET;
   } else if (curr_string == "def") {
-    return {Def{}};
+    return TokenType::DEF;
   } else if (curr_string == "extern") {
-    return {Extern{}};
+    return TokenType::EXTERN;
   } else if (curr_string == "return") {
-    return {Return{}};
+    return TokenType::RETURN;
   } else {
-    return Identifier{
-        std::string_view(this->char_vec.data() + start, end - start)};
+    return {TokenType::IDENTIFIER,
+        std::string(this->char_vec.data() + start, end - start)};
   }
 }
 
@@ -129,7 +132,9 @@ Token Lexer::get_token_from_number_string(std::string number_string) {
     std::cerr << "Fatal Error: Invalid Conversion" << std::endl;
     exit(EXIT_FAILURE);
   }
-  return {Number{res}};
+  return {
+    TokenType::NUMBER,
+    res};
 }
 
 void Lexer::skip_whitespace() {
