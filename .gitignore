@@ -20,6 +20,7 @@
 # Clangd files
 /.clangd/
 .clangd/
+.cache/
 .compile_commands.json
 
 # Visual Studio Code

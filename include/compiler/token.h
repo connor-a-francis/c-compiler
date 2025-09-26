@@ -1,58 +1,16 @@
-// Token.h
 #pragma once
-#include <variant>
-#include <string_view>
+#include <string>
+#include <any>
+#include "token_type.h"
 
-
-
-struct EndOfFile {};
-struct EOL {};
-struct Def {};
-struct Let {};
-struct Extern {};
-struct Return {};
-struct Eq {};
-struct LParen {};
-struct RParen {};
-struct LBrace {};
-struct RBrace {};
-
-struct Op {
-    char op;
+class Token {
+public:
+    Token() = default;
+    Token(TokenType type): type(std::move(type)) {}
+    Token(TokenType type, std::any literal): type(std::move(type)), literal(std::move(literal)) {}
+    std::string toString() const;
+    std::string literalToString() const;
+    std::string typeToString() const;
+    TokenType type;
+    std::any literal;
 };
-
-struct Identifier {
-    std::string_view name;
-};
-
-struct Number {
-    float value;
-};
-
-struct Misc {
-    char val;
-};
-
-using Token = std::variant<
-    EndOfFile,
-    Op,
-    EOL,
-    Def,
-    Let,
-    Extern,
-    Return,
-    Eq,
-    LParen,
-    RParen,
-    LBrace,
-    RBrace,
-    Identifier,
-    Number,
-    Misc
->;
-
-template<class... Ts> 
-struct overloaded : Ts... { using Ts::operator()...; };
-
-template<class... Ts> 
-overloaded(Ts...) -> overloaded<Ts...>;

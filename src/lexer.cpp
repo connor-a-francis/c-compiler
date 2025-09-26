@@ -6,32 +6,27 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <variant>
 #include <vector>
 
 char EOF_ = '\x1B';
 
+
 std::vector<Token> Lexer::get_tokens() {
   if (this->char_vec.size() == 0) {
-    return {EndOfFile{}};
-
+    return {Token(TokenType::END_OF_FILE)};
   }
-  while (true) {
-    Token token = this->get_tok();
-    this->tokens.push_back(token);
-    if (std::holds_alternative<EndOfFile>(token)) {
-      break;
-    }
-  }
-  return this->tokens;
+  do {this->tokens.push_back(this->get_tok());}
+  while (this->tokens.back().type != TokenType::END_OF_FILE);
+    return this->tokens;
 };
+
 Token Lexer::get_tok() {
   this->skip_whitespace();
 
   char c = this->get_current();
 
   if (c == EOF_) {
-    return {EndOfFile{}};
+    return {Token(TokenType::END_OF_FILE)};
   } else if (isdigit(c) || c == '.') {
     return this->get_number();
   } else if (c == '#') {
@@ -49,100 +44,117 @@ Token Lexer::get_symbol(char c) {
   Token t;
   switch (c) {
   case '=':
-    t = Eq{};
+    t = TokenType::EQ;
     break;
   case ';':
-    t = EOL{};
+    t = TokenType::EOL;
     break;
   case '(':
-    t = LParen{};
+    t = TokenType::L_PAREN;
     break;
   case ')':
-    t = RParen{};
+    t = TokenType::R_PAREN;
+    break;
+  case ',':
+    t = TokenType::COMMA;
     break;
   case '{':
-    t = LBrace{};
+    t = TokenType::L_BRACE;
     break;
   case '}':
-    t = RBrace{};
+    t = TokenType::R_BRACE;
     break;
-
   case '+':
-    [[fallthrough]];
+    t = TokenType::ADD;
+    break;
   case '-':
-    [[fallthrough]];
+    t = TokenType::SUB;
+    break;
   case '*':
-    [[fallthrough]];
+    t = TokenType::MUL;
+    break;
   case '/':
-    t = Op{c};
+    t = TokenType::DIV;
     break;
   default:
-    t = Misc{c};
+    t = TokenType::MISC;
+    t.literal = c;
   }
   return t;
 };
-Token Lexer::get_string() {
-  int start_index = this->char_index;
-  while ((isalnum(this->get_current())) && this->get_current() != EOF_) {
-    this->move_read_head();
-  }
-  int end_index = this->char_index;
 
-  std::string curr_string(this->char_vec.begin() + start_index,
-                          this->char_vec.begin() + end_index);
+Token Lexer::get_string() {
+  int start = this->char_index;
+
+  char cur = this->get_current();
+  while ((isalnum(cur)) && cur != EOF_) {
+    this->move_read_head();
+    cur = this->get_current();
+  }
+
+  return get_token_from_string(start, this->char_index);
+};
+
+Token Lexer::get_token_from_string(int start, int end) {
+  auto vec_ptr = this->char_vec.begin();
+  std::string curr_string(vec_ptr + start, vec_ptr + end);
 
   if (curr_string == "let") {
-    return {Let{}};
+    return TokenType::LET;
   } else if (curr_string == "def") {
-    return {Def{}};
+    return TokenType::DEF;
   } else if (curr_string == "extern") {
-    return {Extern{}};
+    return TokenType::EXTERN;
   } else if (curr_string == "return") {
-    return {Return{}};
-
+    return TokenType::RETURN;
   } else {
-    int length = end_index - start_index;
-    const char *start_ptr = this->char_vec.data() + start_index;
-    return Identifier{std::string_view(start_ptr, length)};
+    return {TokenType::IDENTIFIER,
+        std::string(this->char_vec.data() + start, end - start)};
   }
-};
+}
 
 Token Lexer::get_number() {
   std::string number_string;
 
-  while (isdigit(this->get_current()) || this->get_current() == '.') {
-    number_string.push_back(this->get_current());
+  char cur = this->get_current();
+  while (isdigit(cur) || cur == '.') {
+    number_string.push_back(cur);
     this->move_read_head();
+    cur = this->get_current();
   }
+  return get_token_from_number_string(number_string);
+};
 
+Token Lexer::get_token_from_number_string(std::string number_string) {
   float res;
   std::stringstream ss(number_string);
   ss >> res;
 
-  if (ss.fail()) {
+  if (ss.fail() or !ss.eof()) {
     std::cerr << "Fatal Error: Invalid Conversion" << std::endl;
     exit(EXIT_FAILURE);
   }
-  return {Number{res}};
-};
+  return {
+    TokenType::NUMBER,
+    res};
+}
 
 void Lexer::skip_whitespace() {
   while (isspace(this->get_current())) {
     this->move_read_head();
   }
 };
+
 void Lexer::move_read_head() { this->char_index += 1; };
 
 void Lexer::skip_comment() {
-  while ((this->get_current() != EOF_) && (this->get_current() != '\n') &&
-         (this->get_current() != '\r')) {
+  char cur = this->get_current();
+  while ((cur != EOF_) && (cur != '\n') && (cur != '\r')) {
     this->move_read_head();
+    cur = this->get_current();
   }
 };
+
 char Lexer::get_current() {
-  if (this->char_index >= this->char_vec.size() ) {
-    return EOF_;
-  } else {
-    return this->char_vec[this->char_index];
-  }
+  return (this->char_index >= this->char_vec.size()) ? EOF_ : this->char_vec[this->char_index];
 };

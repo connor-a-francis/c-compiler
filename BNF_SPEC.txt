@@ -1,0 +1,36 @@
+DEF "def"
+LET "let"
+EXTERN "extern"
+RETURN "return"
+LP "("
+RP ")"
+LB "{"
+RB "}"
+EQ "="
+COMMA "="
+EOL ";"
+ADD "+" 
+MIN "-" 
+MUL "*" 
+DIV "/"
+IDENTIFIER "[A-Za-z][\w?]*"
+LITERAL "\d+.?\d+"
+
+
+
+
+<program> ::= <statement>+
+<statement> ::= <definition> | <binding> | <extern> | <return> 
+<definition> ::= DEF <IDENTIFIER> LP <params> RP LB <program> RB
+<binding> ::= LET <IDENTIFIER> EQ <expression> EOL
+<extern> ::= EXTERN <expression> EOL
+<return> ::= RETURN <expression> EOL
+<expression> ::= <LITERAL> | <binaryExpr> | <IDENTIFIER> | <call> | <grouping>
+<call> ::= <IDENTIFIER> LP <rands> RP
+<binaryExpr> ::= <expression> <operator> <expression>
+<grouping> ::= LP <expression> RP
+<rands> ::= <expression> <rand>*
+<rand> ::= COMMA <expression>
+<params> ::= <IDENTIFIER> <param>*
+<param> ::= COMMA <IDENTIFIER>
+<operator> ::= ADD | MIN | MUL | DIV

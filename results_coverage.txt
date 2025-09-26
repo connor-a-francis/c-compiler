@@ -1,0 +1,54 @@
+Internal ctest changing into directory: /home/connorfrancis/repo/compiler/build
+Test project /home/connorfrancis/repo/compiler/build
+      Start  1: LexerTest.LexerBuilds
+ 1/13 Test  #1: LexerTest.LexerBuilds ........................   Passed    0.00 sec
+      Start  2: LexerTest.LexerReadsEOF
+ 2/13 Test  #2: LexerTest.LexerReadsEOF ......................   Passed    0.00 sec
+      Start  3: LexerTest.LexerReadsSpaceEOF
+ 3/13 Test  #3: LexerTest.LexerReadsSpaceEOF .................   Passed    0.00 sec
+      Start  4: LexerTest.LexerReadsDef
+ 4/13 Test  #4: LexerTest.LexerReadsDef ......................   Passed    0.00 sec
+      Start  5: LexerTest.LexerReadsExtern
+ 5/13 Test  #5: LexerTest.LexerReadsExtern ...................   Passed    0.00 sec
+      Start  6: LexerTest.LexerSkipsComment
+ 6/13 Test  #6: LexerTest.LexerSkipsComment ..................   Passed    0.00 sec
+      Start  7: LexerTest.LexerReadsMath
+ 7/13 Test  #7: LexerTest.LexerReadsMath .....................   Passed    0.00 sec
+      Start  8: LexerTest.LexerReadsDefAndImpl
+ 8/13 Test  #8: LexerTest.LexerReadsDefAndImpl ...............   Passed    0.00 sec
+      Start  9: LexerTest.LexerReadsNumbers
+ 9/13 Test  #9: LexerTest.LexerReadsNumbers ..................   Passed    0.00 sec
+      Start 10: LexerTest.LexerCrashesWithMultipleDecimals
+10/13 Test #10: LexerTest.LexerCrashesWithMultipleDecimals ...   Passed    0.01 sec
+      Start 11: ParserTest.ParserBuilds
+11/13 Test #11: ParserTest.ParserBuilds ......................   Passed    0.00 sec
+      Start 12: ParserTest.ParserReadsDef
+12/13 Test #12: ParserTest.ParserReadsDef ....................   Passed    0.00 sec
+      Start 13: ParserTest.ParserReadsExtern
+13/13 Test #13: ParserTest.ParserReadsExtern .................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Total Test time (real) =   0.06 sec
+------------------------------------------------------------------------------
+                           GCC Code Coverage Report
+Directory: .
+------------------------------------------------------------------------------
+File                                       Lines    Exec  Cover   Missing
+------------------------------------------------------------------------------
+include/compiler/ast.h                         4       4   100%
+include/compiler/lexer.h                       6       6   100%
+include/compiler/parse_error.h                 2       0     0%   9-10
+include/compiler/parser.h                      7       7   100%
+include/compiler/token.h                       3       3   100%
+include/compiler/visitor.h                     1       1   100%
+src/ast.cpp                                   35       5    14%   6-8,10,13,15-17,19,22,32-34,36,39,41-43,45,48,50-52,54,57,59-61,63,66
+src/ast_printer.cpp                           58      18    31%   26-46,49-61,65-67,72-74
+src/lexer.cpp                                112     107    95%   59-61,85,110
+src/parser.cpp                                76      35    46%   25-26,28-29,31-32,34-37,41-42,48,55,58,61,69,71,74,76,79,81,84,86,89,91,94,96,99,101,110-112,114,116-117,119,121,142,144-145
+src/token.cpp                                 62      10    16%   15-50,58-66,71-72,76-77,81-83
+tests/test_lexer.cpp                          67      64    95%   79,125,127
+tests/test_parser.cpp                         17      17   100%
+------------------------------------------------------------------------------
+TOTAL                                        450     277    61%
+------------------------------------------------------------------------------

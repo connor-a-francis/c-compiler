@@ -10,7 +10,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 # Build test binary
-add_executable(my_tests test_lexer.cpp)
+add_executable(my_tests test_lexer.cpp test_parser.cpp)
 
 # Link against your library + gtest
 target_link_libraries(my_tests PRIVATE compiler GTest::gtest_main)
