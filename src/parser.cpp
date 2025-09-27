@@ -62,7 +62,6 @@ std::shared_ptr<Expr> Parser::parseDefinition() {
     }
 
     auto body = parseProgram();
-
     return std::make_shared<Definition>(std::make_shared<Token>(name), params, body);
 }
 

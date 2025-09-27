@@ -1,85 +1,67 @@
+#include "compiler/lexer.h"
+#include "compiler/token.h"
 #include "gtest/gtest.h"
 #include <cassert>
 #include <gtest/gtest.h>
-#include <variant>
-#include "compiler/lexer.h"
-#include "compiler/token.h"
 #include <string>
+#include <variant>
 #include <vector>
+
+using enum TokenType;
 
 void test(std::string program, std::vector<Token> expected_input);
 void test_crashes(std::string program, std::string msg);
 
-TEST(LexerTest, LexerBuilds)
-{
-    Lexer result({'a'});
+TEST(LexerTest, LexerBuilds) { Lexer result({'a'}); }
+TEST(LexerTest, LexerReadsEOF) { test("", {{END_OF_FILE, 0, 0, 1}}); }
+TEST(LexerTest, LexerReadsSpaceEOF) { test(" ", {{END_OF_FILE, 0, 1, 1}}); }
+TEST(LexerTest, LexerReadsDef) {
+  test(R"(def hello() {})",
+       {Token(DEF, 0, 0, 3), Token(IDENTIFIER, 0, 4, 5, std::string("hello")),
+        Token(L_PAREN, 0, 9, 1), Token(R_PAREN, 0, 10, 1),
+        Token(L_BRACE, 0, 12, 1), Token(R_BRACE, 0, 13, 1),
+        Token(END_OF_FILE, 0, 14, 1)});
 }
-TEST(LexerTest, LexerReadsEOF)
-{
-    test("", {TokenType::END_OF_FILE});
+TEST(LexerTest, LexerReadsExtern) {
+  test(R"(extern hello;)",
+       {Token(EXTERN, 0, 0, 6),
+        Token(IDENTIFIER, 0, 7, 5, std::string("hello")), Token(EOL, 0, 12, 1),
+        Token(END_OF_FILE, 0, 13, 1)});
 }
-TEST(LexerTest, LexerReadsSpaceEOF)
-{
-    test(" ", {TokenType::END_OF_FILE});
-}
-TEST(LexerTest, LexerReadsDef)
-{
-    test(R"(def hello() {})", {
-                                  TokenType::DEF,
-                                  {TokenType::IDENTIFIER, std::string("hello")},
-                                  TokenType::L_PAREN,
-                                  TokenType::R_PAREN,
-                                  TokenType::L_BRACE,
-                                  TokenType::R_BRACE,
-                                  TokenType::END_OF_FILE,
-                              });
-}
-TEST(LexerTest, LexerReadsExtern)
-{
-    test(R"(extern hello;)", {
-                                 TokenType::EXTERN,
-                                 {TokenType::IDENTIFIER, std::string("hello")},
-                                 TokenType::EOL,
-                                 TokenType::END_OF_FILE,
-                             });
-}
-TEST(LexerTest, LexerSkipsComment)
-{
-    test(R"(extern hello
-                          # skip me!
+TEST(LexerTest, LexerSkipsComment) {
+  test(R"(extern hello
+                         # skip me!
                           def goodbye() {})",
-         {TokenType::EXTERN,
-          {TokenType::IDENTIFIER, std::string("hello")},
-          TokenType::DEF,
-          {TokenType::IDENTIFIER, std::string("goodbye")},
-          TokenType::L_PAREN,
-          TokenType::R_PAREN,
-          TokenType::L_BRACE,
-          TokenType::R_BRACE,
-          TokenType::END_OF_FILE});
+       {Token(EXTERN, 0, 0, 6),
+        Token(IDENTIFIER, 0, 7, 5, std::string("hello")), Token(DEF, 2, 0, 3),
+        Token(IDENTIFIER, 2, 4, 7, std::string("goodbye")),
+        Token(L_PAREN, 2, 11, 1), Token(R_PAREN, 2, 12, 1),
+        Token(L_BRACE, 2, 14, 1), Token(R_BRACE, 2, 15, 1),
+        Token(END_OF_FILE, 2, 16, 1)});
 }
-TEST(LexerTest, LexerReadsMath)
-{
-    test(R"(let a=(b+c)-d*e/(f+$);)", {TokenType::LET,
-                                       {TokenType::IDENTIFIER, std::string("a")},
-                                       TokenType::EQ,
-                                       TokenType::L_PAREN,
-                                       {TokenType::IDENTIFIER, std::string("b")},
-                                       TokenType::ADD,
-                                       {TokenType::IDENTIFIER, std::string("c")},
-                                       TokenType::R_PAREN,
-                                       TokenType::SUB,
-                                       {TokenType::IDENTIFIER, std::string("d")},
-                                       TokenType::MUL,
-                                       {TokenType::IDENTIFIER, std::string("e")},
-                                       TokenType::DIV,
-                                       TokenType::L_PAREN,
-                                       {TokenType::IDENTIFIER, std::string("f")},
-                                       TokenType::ADD,
-                                       {TokenType::MISC, '$'},
-                                       TokenType::R_PAREN,
-                                       TokenType::EOL,
-                                       TokenType::END_OF_FILE});
+TEST(LexerTest, LexerReadsMath) {
+
+  test(R"(let a=(b+c)-d*e/(f+$);)",
+       {Token(LET, 0, 0, 3),
+        Token(IDENTIFIER, 0, 4, 1, std::string("a")),
+        Token(EQ, 0, 5, 1),
+        Token(L_PAREN, 0, 6, 1),
+        Token(IDENTIFIER, 0, 7, 1, std::string("b")),
+        Token(ADD, 0, 8, 1),
+        Token(IDENTIFIER, 0, 9, 1, std::string("c")),
+        Token(R_PAREN, 0, 10, 1),
+        Token(SUB, 0, 11, 1),
+        Token(IDENTIFIER, 0, 12, 1, std::string("d")),
+        Token(MUL, 0, 13, 1),
+        Token(IDENTIFIER, 0, 14, 1, std::string("e")),
+        Token(DIV, 0, 15, 1),
+        Token(L_PAREN, 0, 16, 1),
+        Token(IDENTIFIER, 0, 17, 1, std::string("f")),
+        Token(ADD, 0, 18, 1),
+        Token(MISC, 0, 19, 1, '$'),
+        Token(R_PAREN, 0, 20, 1),
+        Token(EOL, 0, 21, 1),
+        Token(END_OF_FILE, 0, 22, 1)});
 }
 
 TEST(LexerTest, LexerReadsDefAndImpl)
@@ -90,46 +72,49 @@ TEST(LexerTest, LexerReadsDefAndImpl)
         }
         )",
          {
-             TokenType::DEF,
-             {TokenType::IDENTIFIER, std::string("hello")},
-             TokenType::L_PAREN,
-             TokenType::R_PAREN,
-             TokenType::L_BRACE,
-             TokenType::LET,
-             {TokenType::IDENTIFIER, std::string("a")},
-             TokenType::EQ,
-             {TokenType::IDENTIFIER, std::string("b")},
-             TokenType::ADD,
-             {TokenType::IDENTIFIER, std::string("c")},
-             TokenType::EOL,
-             TokenType::R_BRACE,
-             TokenType::END_OF_FILE,
+             Token(DEF, 1, 0, 3),
+             Token(IDENTIFIER, 1, 4, 5, std::string("hello")),
+             Token(L_PAREN, 1, 9, 1),
+             Token(R_PAREN, 1, 10, 1),
+             Token(L_BRACE, 1, 12, 1),
+             Token(LET, 2, 0, 3),
+             Token(IDENTIFIER, 2, 4, 1, std::string("a")),
+             Token(EQ, 2, 6, 1),
+             Token(IDENTIFIER, 2, 8, 1, std::string("b")),
+             Token(ADD, 2, 10, 1),
+             Token(IDENTIFIER, 2, 12, 1, std::string("c")),
+             Token(EOL, 2, 13, 1),
+             Token(R_BRACE, 3, 0, 1),
+             Token(END_OF_FILE, 4, 0, 1),
          });
 }
 TEST(LexerTest, LexerReadsNumbers)
 {
     test(R"(
-        def hellodef() {
+        def hello() {
             let a = 45 + 69.2;
         }
         )",
          {
-             TokenType::DEF,
-             {TokenType::IDENTIFIER, std::string("hellodef")},
-             TokenType::L_PAREN,
-             TokenType::R_PAREN,
-             TokenType::L_BRACE,
-             TokenType::LET,
-             {TokenType::IDENTIFIER, std::string("a")},
-             TokenType::EQ,
-             {TokenType::NUMBER, (float)45.0},
-             TokenType::ADD,
-             {TokenType::NUMBER, (float)69.2},
-             TokenType::EOL,
-             TokenType::R_BRACE,
-             TokenType::END_OF_FILE,
+
+            // Token(TokenType type, int line, int col, int length)
+             Token(DEF, 1, 0, 3),
+             Token(IDENTIFIER, 1, 4, 5, std::string("hello")),
+             Token(L_PAREN, 1, 9, 1),
+             Token(R_PAREN, 1, 10, 1),
+             Token(L_BRACE, 1, 12, 1),
+             Token(LET, 2, 0, 3),
+             Token(IDENTIFIER, 2, 4, 1, std::string("a")),
+             Token(EQ, 2, 6, 1),
+             Token(NUMBER, 2, 8, 2, (float)45.0),
+             Token(ADD, 2, 11, 1),
+             Token(NUMBER, 2, 13, 4, (float)69.2),
+             Token(EOL, 2, 17, 1),
+             Token(R_BRACE, 3, 0, 1),
+             Token(END_OF_FILE, 4, 0, 1),
          });
 }
+
 TEST(LexerTest, LexerCrashesWithMultipleDecimals)
 {
     test_crashes(R"(
@@ -137,35 +122,39 @@ TEST(LexerTest, LexerCrashesWithMultipleDecimals)
             let a = 45 + 69.2.3;
         }
     )",
-                 "Fatal Error: Invalid Conversion");
+                 "Fatal Error: Invalid Float Conversion");
 }
 
-void test(std::string program, std::vector<Token> expected_input)
-{
-    std::vector<char> input(program.begin(), program.end());
-    auto result = Lexer(input).get_tokens();
-    auto expected = expected_input;
-    ASSERT_EQ(result.size(), expected.size());
-    for (size_t i = 0; i < result.size(); i++)
-    {
-        ASSERT_EQ(result[i].type, expected[i].type);
-        if (result[i].type == TokenType::IDENTIFIER)
-        {
-            ASSERT_EQ(std::any_cast<std::string>(result[i].literal), std::any_cast<std::string>(expected[i].literal));
-        }
-        else if (result[i].type == TokenType::NUMBER)
-        {
-            ASSERT_EQ(std::any_cast<float>(result[i].literal), std::any_cast<float>(expected[i].literal));
-        }
-        else if (result[i].type == TokenType::MISC)
-        {
-            ASSERT_EQ(std::any_cast<char>(result[i].literal), std::any_cast<char>(expected[i].literal));
-        }
+void test(std::string program, std::vector<Token> expected_input) {
+  std::vector<char> input(program.begin(), program.end());
+  auto result = Lexer(input).get_tokens();
+  auto expected = expected_input;
+  ASSERT_EQ(result.size(), expected.size());
+  for (size_t i = 0; i < result.size(); i++) {
+    std::string s =
+        result[i].toString() + " should be equal to " + expected[i].toString();
+    ASSERT_EQ(result[i].type, expected[i].type) << s;
+    ASSERT_EQ(result[i].line, expected[i].line) << s;
+    ASSERT_EQ(result[i].col, expected[i].col) << s;
+    ASSERT_EQ(result[i].length, expected[i].length) << s;
+
+    if (result[i].type == IDENTIFIER) {
+      ASSERT_EQ(std::any_cast<std::string>(result[i].literal),
+                std::any_cast<std::string>(expected[i].literal))
+          << s;
+    } else if (result[i].type == NUMBER) {
+      ASSERT_EQ(std::any_cast<float>(result[i].literal),
+                std::any_cast<float>(expected[i].literal))
+          << s;
+    } else if (result[i].type == MISC) {
+      ASSERT_EQ(std::any_cast<char>(result[i].literal),
+                std::any_cast<char>(expected[i].literal))
+          << s;
     }
+  }
 }
 
-void test_crashes(std::string program, std::string msg)
-{
-    std::vector<char> input(program.begin(), program.end());
-    ASSERT_DEATH(Lexer(input).get_tokens(), msg);
+void test_crashes(std::string program, std::string msg) {
+  std::vector<char> input(program.begin(), program.end());
+  ASSERT_DEATH(Lexer(input).get_tokens(), msg);
 }
