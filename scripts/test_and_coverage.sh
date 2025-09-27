@@ -4,4 +4,5 @@ cmake --build build > /dev/null
 
 # Run tests
 ctest --output-on-failure --test-dir build
+gcovr -e build
 rm -rf Testing

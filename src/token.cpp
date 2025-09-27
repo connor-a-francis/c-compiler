@@ -3,49 +3,34 @@
 #include "compiler/token.h"
 
     std::string Token::toString() const {
-        return "Token(" + typeToString() + ", " + literalToString() + ")";
+        return "Token(" + typeToString() + ", " +  literalToString() + "line: " + std::to_string(line) + ", col: " + std::to_string(col) + ", length: " + std::to_string(length) + ")";
     }
 
     std::string Token::literalToString() const {
         switch (type) {
             case TokenType::IDENTIFIER:
-                return std::any_cast<std::string>(literal);
+                return "literal: " + std::any_cast<std::string>(literal) + ", ";
             case TokenType::NUMBER:
-                return std::to_string(std::any_cast<float>(literal));
+                return "literal: " + std::to_string(std::any_cast<float>(literal)) + ", ";
             case TokenType::MISC:
-                return std::string(1, std::any_cast<char>(literal));
+                return "literal: " + std::string(1, std::any_cast<char>(literal)) + ", ";
             case TokenType::END_OF_FILE:
-                return "EOF";
             case TokenType::ADD:
-                return "+";
             case TokenType::SUB:
-                return "-";
             case TokenType::MUL:
-                return "*";
             case TokenType::DIV:
-                return "/";
             case TokenType::EOL:
-                return ";";
             case TokenType::DEF:
-                return "def";
             case TokenType::LET:
-                return "let";
             case TokenType::EXTERN:
-                return "extern";
             case TokenType::RETURN:
-                return "return";
             case TokenType::EQ:
-                return "=";
             case TokenType::L_PAREN:
-                return "(";
             case TokenType::R_PAREN:
-                return ")";
             case TokenType::L_BRACE:
-                return "{";
             case TokenType::R_BRACE:
-                return "}";
             default:
-                return "UNKNOWN";
+                return "";
         }
     }
 
@@ -54,7 +39,7 @@
             case TokenType::IDENTIFIER:
                 return "Identifier";
             case TokenType::NUMBER:
-                return "Literal";
+                return "Number";
             case TokenType::MISC:
                 return "Misc";
             case TokenType::END_OF_FILE:
@@ -62,21 +47,31 @@
             case TokenType::EOL:
                 return "EOL";
             case TokenType::ADD:
+                return "Add";
             case TokenType::SUB:
+                return "Sub";
             case TokenType::MUL:
+                return "Mul";
             case TokenType::DIV:
+                return "Div";
             case TokenType::EQ:
                 return "Operator";
             case TokenType::DEF:
+                return "Def";
             case TokenType::LET:
+                return "Let";
             case TokenType::EXTERN:
+                return "Extern";
             case TokenType::RETURN:
                 return "Keyword";
             case TokenType::L_PAREN:
+                return "Left Paren";
             case TokenType::R_PAREN:
+                return "Right Paren";
             case TokenType::L_BRACE:
+                return "Left Brace";
             case TokenType::R_BRACE:
-                return "Delimiter";
+                return "Right Brace";
             default:
                 return "UNKNOWN";
         }
