@@ -7,7 +7,7 @@ Test project /home/connorfrancis/repo/compiler/build
       Start  3: LexerTest.LexerReadsSpaceEOF
  3/10 Test  #3: LexerTest.LexerReadsSpaceEOF .................   Passed    0.00 sec
       Start  4: LexerTest.LexerReadsDef
- 4/10 Test  #4: LexerTest.LexerReadsDef ......................   Passed    0.00 sec
+ 4/10 Test  #4: LexerTest.LexerReadsDef ......................   Passed    0.01 sec
       Start  5: LexerTest.LexerReadsExtern
  5/10 Test  #5: LexerTest.LexerReadsExtern ...................   Passed    0.00 sec
       Start  6: LexerTest.LexerSkipsComment
@@ -35,9 +35,9 @@ include/compiler/lexer.h                       8       8   100%
 include/compiler/parse_error.h                 2       0     0%   9-10
 include/compiler/token.h                       7       7   100%
 src/ast.cpp                                   35       0     0%   6-8,10,13,15-17,19,22,24-26,28,31-34,36,39,41-43,45,48,50-52,54,57,59-61,63,66
-src/lexer.cpp                                135     131    97%   68-70,132
+src/lexer.cpp                                135     135   100%
 src/parser.cpp                                76       0     0%   7-9,12,20,22-23,25-26,28-29,31-32,34-37,41-42,46-48,51-52,54-55,57-58,60-61,64-66,68,70,73,75,78,80,83,85,88,90,93,95,98,100,104-107,109-111,113,115-116,118,120,123-126,128-135,138,140-141,143-144
-src/token.cpp                                 50      48    96%   65-66
+src/token.cpp                                 50      50   100%
 ------------------------------------------------------------------------------
-TOTAL                                        317     194    61%
+TOTAL                                        317     200    63%
 ------------------------------------------------------------------------------
