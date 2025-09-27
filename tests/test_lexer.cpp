@@ -67,23 +67,24 @@ TEST(LexerTest, LexerReadsMath) {
 TEST(LexerTest, LexerReadsDefAndImpl)
 {
     test(R"(
-        def hello() {
-            let a = b + c;
+        def hello(b, c) {
+            return b + c;
         }
         )",
          {
              Token(DEF, 1, 0, 3),
              Token(IDENTIFIER, 1, 4, 5, std::string("hello")),
              Token(L_PAREN, 1, 9, 1),
-             Token(R_PAREN, 1, 10, 1),
-             Token(L_BRACE, 1, 12, 1),
-             Token(LET, 2, 0, 3),
-             Token(IDENTIFIER, 2, 4, 1, std::string("a")),
-             Token(EQ, 2, 6, 1),
-             Token(IDENTIFIER, 2, 8, 1, std::string("b")),
-             Token(ADD, 2, 10, 1),
-             Token(IDENTIFIER, 2, 12, 1, std::string("c")),
-             Token(EOL, 2, 13, 1),
+             Token(IDENTIFIER, 1, 10, 1, std::string("b")),
+             Token(COMMA, 1, 11, 1),
+             Token(IDENTIFIER, 1, 13, 1, std::string("c")),
+             Token(R_PAREN, 1, 14, 1),
+             Token(L_BRACE, 1, 16, 1),
+             Token(RETURN, 2, 0, 6),
+             Token(IDENTIFIER, 2, 7, 1, std::string("b")),
+             Token(ADD, 2, 9, 1),
+             Token(IDENTIFIER, 2, 11, 1, std::string("c")),
+             Token(EOL, 2, 12, 1),
              Token(R_BRACE, 3, 0, 1),
              Token(END_OF_FILE, 4, 0, 1),
          });
@@ -96,8 +97,6 @@ TEST(LexerTest, LexerReadsNumbers)
         }
         )",
          {
-
-            // Token(TokenType type, int line, int col, int length)
              Token(DEF, 1, 0, 3),
              Token(IDENTIFIER, 1, 4, 5, std::string("hello")),
              Token(L_PAREN, 1, 9, 1),
