@@ -45,20 +45,20 @@ std::shared_ptr<Expr> Parser::parseExpression() {
 // <definition> ::= DEF <IDENTIFIER> LP <params> RP LB <program> RB
 std::shared_ptr<Expr> Parser::parseDefinition() {
     if (!match({TokenType::IDENTIFIER})) {
-        throw parse_error("missing function name");
+        throw parse_error(previous(), "missing function name");
     }
 
     auto name = previous();
     auto params = parseParams();
 
     if (!match({TokenType::L_PAREN})) {
-        throw parse_error("missing opening parenthesis");
+        throw parse_error(previous(), "missing opening parenthesis");
     }
     if (!match({TokenType::R_PAREN})) {
-        throw parse_error("missing closing parenthesis");
+        throw parse_error(previous(), "missing closing parenthesis");
     }
     if (!match({TokenType::L_BRACE})) {
-        throw parse_error("missing opening brace");
+        throw parse_error(previous(), "missing opening brace");
     }
 
     auto body = parseProgram();
@@ -108,7 +108,7 @@ std::vector<shared_ptr<Token>> Parser::parseParams() {
     }
     while (match({TokenType::COMMA})) {
         if (!match({TokenType::IDENTIFIER})) { 
-            throw parse_error("identifier expected");
+            throw parse_error(previous(), "identifier expected");
         }
         params.push_back(std::make_shared<Token>(previous()));
     }
