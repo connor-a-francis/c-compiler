@@ -5,12 +5,12 @@
 #include <vector>
 
 std::vector<std::shared_ptr<Expr>> Parser::parseProgram() {
+    std::vector<std::shared_ptr<Expr>> statements;
     while(!isAtEnd() && !check(TokenType::R_BRACE)) {
             statements.push_back(parseStatement());
     }
 
     return statements;
-
 }
 
 // int current;

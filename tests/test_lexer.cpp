@@ -29,11 +29,12 @@ TEST(LexerTest, LexerReadsExtern) {
         Token(END_OF_FILE, 0, 13, 1)});
 }
 TEST(LexerTest, LexerSkipsComment) {
-  test(R"(extern hello
+  test(R"(extern hello;
                          # skip me!
                           def goodbye() {})",
        {Token(EXTERN, 0, 0, 6),
-        Token(IDENTIFIER, 0, 7, 5, std::string("hello")), Token(DEF, 2, 0, 3),
+        
+        Token(IDENTIFIER, 0, 7, 5, std::string("hello")), Token(EOL, 0, 12, 1), Token(DEF, 2, 0, 3),
         Token(IDENTIFIER, 2, 4, 7, std::string("goodbye")),
         Token(L_PAREN, 2, 11, 1), Token(R_PAREN, 2, 12, 1),
         Token(L_BRACE, 2, 14, 1), Token(R_BRACE, 2, 15, 1),

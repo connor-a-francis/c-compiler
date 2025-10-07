@@ -11,15 +11,12 @@ public:
     Parser(std::vector<Token> token_input){
         current = 0;
         tokens = token_input;
-        statements.clear();
         tokens.reserve(100000);
-        statements.reserve(100000);
     }
     std::vector<std::shared_ptr<Expr>> parseProgram();
 
 private:
     int current;
-    std::vector<std::shared_ptr<Expr>> statements;
     std::vector<Token> tokens;
 
     std::shared_ptr<Expr> parseExpression();
