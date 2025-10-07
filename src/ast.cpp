@@ -64,3 +64,12 @@ Variable::Variable(std::shared_ptr<Token> t) : name(std::move(t))
 {
 
 }
+
+void Extern::accept(Visitor *v) {
+    v->visit_Extern(static_pointer_cast<Extern>(shared_from_this()));
+}
+
+Extern::Extern(std::shared_ptr<Token> t) : name(std::move(t))
+{
+
+}

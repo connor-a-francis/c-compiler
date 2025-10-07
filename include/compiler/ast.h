@@ -48,6 +48,13 @@ public:
     void accept(Visitor* v) override;
 };
 
+class Extern : public Expr {
+public:
+    std::shared_ptr<Token> name;
+    Extern(std::shared_ptr<Token> t);
+    void accept(Visitor* v) override;
+};
+
 class Assignment : public Expr {
 public:
     std::shared_ptr<Token> name;

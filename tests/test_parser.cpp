@@ -31,6 +31,15 @@ TEST(ParserTest, ParserReadsDef)
        );
 }
 
+TEST(ParserTest, ParserReadsExtern) {
+    // extern hello;
+  test(
+       {Token(EXTERN, 0, 0, 6),
+        Token(IDENTIFIER, 0, 7, 5, std::string("hello")), Token(EOL, 0, 12, 1),
+        Token(END_OF_FILE, 0, 13, 1)},
+       {std::make_shared<Extern>(Extern(std::make_shared<Token>(TokenType::IDENTIFIER, 0, 7, 5, string("hello"))))});
+        
+}
 void test(tokenStream input, program expected) {
   std::ostringstream input_string;
   std::ostringstream expected_string;

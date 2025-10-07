@@ -62,6 +62,10 @@ std::shared_ptr<Expr> Parser::parseDefinition() {
     }
 
     auto body = parseProgram();
+
+    if (!match({TokenType::R_BRACE})) {
+        throw parse_error(previous(), "missing closing brace");
+    }
     return std::make_shared<Definition>(std::make_shared<Token>(name), params, body);
 }
 
@@ -72,7 +76,17 @@ std::shared_ptr<Expr> Parser::parseBinding() {
 
 std::shared_ptr<Expr> Parser::parseExtern() {
 // <extern> ::= EXTERN <expression> EOL
-    return std::shared_ptr<Expr>();
+ if (!match({TokenType::IDENTIFIER})) {
+        throw parse_error(peek(), "missing function name");
+    }
+
+    auto name = previous();
+
+    if (!match({TokenType::EOL})) {
+        throw parse_error(peek(), "unexpected token after extern");
+    }
+
+    return std::make_shared<Extern>(std::make_shared<Token>(name));
 }
 
 std::shared_ptr<Expr> Parser::parseReturn() {

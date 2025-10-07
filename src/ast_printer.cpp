@@ -57,6 +57,9 @@ public:
     void visit_Variable(std::shared_ptr<Variable> ptr) override {
         out << "Variable(" << ptr->name->toString() << ")";
     }
+    void visit_Extern(std::shared_ptr<Extern> ptr) override {
+        out << "Extern(" << ptr->name->toString() << ")";
+    }
     void visit_Definition(std::shared_ptr<Definition> ptr) override {
         out << "Definition(name: " << ptr->name->toString() << ", operands: (";
         for (auto& r : ptr->rands) {
